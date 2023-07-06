@@ -71,7 +71,8 @@ double newVarProb;                     // Probability of Generating a new Varian
 bool varCoupled;
 double varAlphaDelta;
 int minEdits;                           // Minimum Number of Edits to New Variant String
-int maxEdits;                           // Maximum Number of Edits to New Variant String
+int maxEdits;
+int altMutRate;                           // Maximum Number of Edits to New Variant String
 
 // Other Variables
 char outRoot[50] = "./Output/";     // The Root Output Directory
@@ -80,6 +81,9 @@ const static bool diagFill = true;  // Should the SDA Fill the UTAM Diagonally
 Graph network(numNodes);
 vector<int> SDAOutput;
 vector<int> epiProfile;
+
+double currentBestVal = 0;
+double prevBestVal = 0;// holds the best value from the previous run !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // Method Declarations
 int getArgs(char *args[]);                              // Get Command Line Arguments
@@ -109,71 +113,34 @@ int printIdxsOfVector(T1 &outp, vector<T2> vec,
 void reportBest(ostream &outStrm);
 
 int getArgs(char *args[]) {
-    string arg = args[1]; // ctrlVariants
-    try {
-        size_t pos;
-        ctrlVariants = std::stoi(arg, &pos);
-        if (pos < arg.size()) {
-            std::cerr << "Trailing characters after number: " << arg << endl;
+    seed = stoi(args[1]);
+    ctrlFitnessFctn = stoi(args[2]);
+    newVarProb = stod(args[3]);
+    // Ensure that variants are not used in combination with profile matching fitness.
+    assert(ctrlFitnessFctn != 1 || newVarProb == 0.0);
+    initRunNum = stoi(args[4]);
+    runs = stoi(args[5]);
+    popsize = stoi(args[6]);
+    generations = stoi(args[7]);
+    tournSize = stoi(args[8]);
+    crossoverRate = stod(args[9]);
+    mutationRate = stod(args[10]);
+    maxMuts = stoi(args[11]);
+    numSampEpis = stoi(args[12]);
+    SDANumStates = stoi(args[13]);
+    if (ctrlFitnessFctn == 1) { // Profile Matching
+        pathToProfile = args[14];
+        profileNum = stoi(args[15]);
+    } else if (newVarProb > 0.0) { // Variants
+        initOneBits = stoi(args[14]);
+        minEdits = stoi(args[15]);
+        maxEdits = stoi(args[16]);
+        varCoupled = stoi(args[17]) == 1;
+        if (!varCoupled) {
+            varAlphaDelta = stod(args[18]);
         }
     }
-
-    arg = args[2]; // variantProb
-    try {
-        variantProb = std::stod(arg);
-    } catch (std::invalid_argument const &ex) {
-        std::cerr << "Invalid number: " << arg << '\n';
-    } catch (std::out_of_range const &ex) {
-        std::cerr << "Number out of range: " << arg << '\n';
-    }
-
-    arg = args[3]; // minEdits
-    try {
-        size_t pos;
-        minEdits = std::stoi(arg, &pos);
-        if (pos < arg.size()) {
-            std::cerr << "Trailing characters after number: " << arg << endl;
-        }
-    } catch (std::invalid_argument const &ex) {
-        std::cerr << "Invalid number: " << arg << '\n';
-    } catch (std::out_of_range const &ex) {
-        std::cerr << "Number out of range: " << arg << '\n';
-    }
-
-    arg = args[4]; // maxEdits
-    try {
-        size_t pos;
-        maxEdits = std::stoi(arg, &pos);
-        if (pos < arg.size()) {
-            std::cerr << "Trailing characters after number: " << arg << endl;
-        }
-    } catch (std::invalid_argument const &ex) {
-        std::cerr << "Invalid number: " << arg << '\n';
-    } catch (std::out_of_range const &ex) {
-        std::cerr << "Number out of range: " << arg << '\n';
-    }
-
-    arg = args[5]; // ctrlEpiSpread
-    try {
-        size_t pos;
-        ctrlEpiSpread = std::stoi(arg, &pos);
-        if (pos < arg.size()) {
-            std::cerr << "Trailing characters after number: " << arg << endl;
-        }
-    } catch (std::invalid_argument const &ex) {
-        std::cerr << "Invalid number: " << arg << '\n';
-    } catch (std::out_of_range const &ex) {
-        std::cerr << "Number out of range: " << arg << '\n';
-    }
-
-    arg = args[6]; // ctrlProfileMatching
-    try {
-        size_t pos;
-        ctrlProfileMatching = std::stoi(arg, &pos);
-        if (pos < arg.size()) {
-            std::cerr << "Trailing characters after number: " << arg << endl;
-        }
-    }
+    altMutRate = stoi(args[19]);
     cout << "Arguments Captured!" << endl;
     return 0;
 }
@@ -533,8 +500,6 @@ double epiSeverityFitness(int idx, bool final) {
                         bestVarDNAs[var] = varDNAs[var];
                         bestVarAlphas[var] = varAlphas[var];
                     }
-                } else {
-                    oneSum += pow(targetProfile[day] - epiProfile[day], 2);
                 }
             }
         }
@@ -622,6 +587,7 @@ void report(ostream &outStrm) {//make a statistical report
     double stdDev = stats[1];
     double CI95 = stats[2];
     double bestVal = stats[3];
+    currentBestVal = stats[3];// record the best value for the current run
     double worstVal = stats[4];
 
     // Find the Best and Update the Fitness of Dead Members of the Population
@@ -686,10 +652,38 @@ vector<double> calcStats(const vector<int> &goodIdxs, bool biggerBetter) {
         stdDevSum += pow(fits[idx] - mean, 2);
     }
     double stdDev = sqrt(stdDevSum / ((double) goodIdxs.size() - 1.0));
-    double CI95 = 1.96 * (stdDev / sqrt((double) goodIdxs.size()));// 95% confidence interval
+    double CI95 = 1.96 * (stdDev / sqrt((double) goodIdxs.size()));
 
     return {mean, stdDev, CI95, bestVal, worstVal}; // {mean, stdDev, 95CI, best, worst}
 }
+
+/* 
+This method uses sigmoid function to alter the mutation rate based on the current mating event !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+sigmoid to be used:  1/(1+e^(5-x))
+*/
+void sigmoidFunc(int event) {
+    mutationRate = 1/(1 + exp(5 - event));// re-calculate the mutation rate using sigmoid function
+}//SigmoidFunc
+
+void altMutRatePercent(){
+
+    if(prevBestVal == 0){ // if the previous best value is zero
+        prevBestVal = currentBestVal;// set it to the current best value 
+        return;// return without changing mutation rate
+    }
+
+    int change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
+    change = change/currentBestVal;// calculate percentage increase 
+
+    if(change == 0) mutationRate += .3;// if no change
+    else if(change > 0 && change <= .01 ) mutationRate += .2;// if small change
+    else if(change > .01 && change <= .05) mutationRate += .1;// if better change
+    else if(change > 0.5 && change <= .2) mutationRate += .05;// if greatest change
+    else mutationRate = .05;// reset mutation rate if got a good change in fitness
+
+    prevBestVal = currentBestVal;// update the previous best val to the current best val
+
+}//altMutRatePercent
 
 void matingEvent() {
     int numMuts;

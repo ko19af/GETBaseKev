@@ -27,6 +27,7 @@
  * 17. Coupled Immunity and Infectivity (0 -> Uncoupled, 1 -> Coupled)
  * If using Variants and Uncoupled (aka the 17th argument is 0)
  * 18. The Maximum Absolute Difference Between a Parent and Child Variant's Alpha (for Uncoupled)
+ * 19. Mutation Rate Function (0 -> use a static mutation rate , 1 -> mutation rate is based on level of improvement in a run, 2 -> use sigmoid function to determine mutation rate for a run)
  * Note: The use of variants using profile matching fitness is not implemented/possible.
  *
  * @param numCmdLineArgs Number of Command Line Arguments
@@ -125,12 +126,20 @@ int main(int numCmdLineArgs, char *cmdLineArgs[]) {
         report(runStats); // Initial Report
         for (int mev = 1; mev <= generations; mev++) { // Evolution
             matingEvent();
-            if (mev % reportEvery == 0) { // Time to report
+            
+            if (mev % reportEvery == 0) { // Time to report and change mutation rate (does so every 100 mating events)
                 if (verbose) {
                     cout << left << setw(5) << run;
                     cout << left << setw(4) << mev / reportEvery;
                 }
                 report(runStats);
+
+                if(altMutRate == 1){// if using the second option for mutation
+                    sigmoidFunc((mev % 34) + 1);// call the sigmoid function 
+                }
+                else if(altMutRate == 2){// if using first option for mutation
+                    altMutRatePercent();// call the percentage based increase
+                }
             }
         }
         runStats.close();
