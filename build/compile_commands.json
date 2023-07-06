@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/home/ko19af/GETBaseKev/build",
+  "command": "/usr/bin/g++   -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/GETBase.dir/main.cpp.o -c /home/ko19af/GETBaseKev/main.cpp",
+  "file": "/home/ko19af/GETBaseKev/main.cpp"
+},
+{
+  "directory": "/home/ko19af/GETBaseKev/build",
+  "command": "/usr/bin/g++   -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/GETBase.dir/SDA.cpp.o -c /home/ko19af/GETBaseKev/SDA.cpp",
+  "file": "/home/ko19af/GETBaseKev/SDA.cpp"
+},
+{
+  "directory": "/home/ko19af/GETBaseKev/build",
+  "command": "/usr/bin/g++   -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/GETBase.dir/Graph.cpp.o -c /home/ko19af/GETBaseKev/Graph.cpp",
+  "file": "/home/ko19af/GETBaseKev/Graph.cpp"
+}
+]

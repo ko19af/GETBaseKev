@@ -1,0 +1,1 @@
+/usr/bin/g++ -O3 -DNDEBUG CMakeFiles/GETBase.dir/main.cpp.o CMakeFiles/GETBase.dir/SDA.cpp.o CMakeFiles/GETBase.dir/Graph.cpp.o -o GETBase 

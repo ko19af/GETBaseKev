@@ -1,0 +1,3 @@
+/home/ko19af/GETBaseKev/build/CMakeFiles/GETBase.dir
+/home/ko19af/GETBaseKev/build/CMakeFiles/edit_cache.dir
+/home/ko19af/GETBaseKev/build/CMakeFiles/rebuild_cache.dir
