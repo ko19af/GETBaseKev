@@ -13,21 +13,21 @@
  * 7. Number of Generations/Mating Events
  * 8. Tournament Size
  * 9. Crossover Rate
- * 10. Mutation Rate
- * 11. Maximum Number of Mutations (MNM) (The number of mutations will be in the range [1, MNM])
- * 12. Number of Sample Epidemics
- * 13. Number of States in the SDAs
+ * 10. Mutation Rate Function (0 -> use a static mutation rate , 1 -> mutation rate is based on level of improvement in a run, 2 -> use sigmoid function to determine mutation rate for a run) 
+ * 11. Mutation Rate (static)
+ * 12. Maximum Number of Mutations (MNM) (The number of mutations will be in the range [1, MNM])
+ * 13. Number of Sample Epidemics
+ * 14. Number of States in the SDAs
  * If Profile Matching (aka the first argument is set to 1)
- * 14. The Path to the Profile from Working Directory (likely ./)
- * 15. The Profile Number
+ * 15. The Path to the Profile from Working Directory (likely ./)
+ * 16. The Profile Number
  * If using Variants (aka the second argument is more than 0.0 and at most 1.0)
- * 14. The Number of 1s in the Initial Variant String
- * 15. The Minimum Number of Edits for Derived Variants, inclusive
- * 16. The Maximum Number of Edits for Derived Variants, inclusive
- * 17. Coupled Immunity and Infectivity (0 -> Uncoupled, 1 -> Coupled)
- * If using Variants and Uncoupled (aka the 17th argument is 0)
- * 18. The Maximum Absolute Difference Between a Parent and Child Variant's Alpha (for Uncoupled)
- * 19. Mutation Rate Function (0 -> use a static mutation rate , 1 -> mutation rate is based on level of improvement in a run, 2 -> use sigmoid function to determine mutation rate for a run)
+ * 15. The Number of 1s in the Initial Variant String
+ * 16. The Minimum Number of Edits for Derived Variants, inclusive
+ * 17. The Maximum Number of Edits for Derived Variants, inclusive
+ * 18. Coupled Immunity and Infectivity (0 -> Uncoupled, 1 -> Coupled)
+ * If using Variants and Uncoupled (aka the 18th argument is 0)
+ * 19. The Maximum Absolute Difference Between a Parent and Child Variant's Alpha (for Uncoupled)
  * Note: The use of variants using profile matching fitness is not implemented/possible.
  *
  * @param numCmdLineArgs Number of Command Line Arguments
@@ -59,10 +59,18 @@ int main(int numCmdLineArgs, char *cmdLineArgs[]) {
                         maxMuts, numSampEpis, SDANumStates, initOneBits, minEdits, maxEdits, varAlphaDelta);
             }
         } else {
-            sprintf(pathToOut, "%sOutput - EL w %03dPS, %06dMevs, %dTS, %03d%%CrR, %03d%%MuR, %dMNM,"
+            if(altMutRate == 0){
+                sprintf(pathToOut, "%sOutput - EL w %03dPS, %06dMevs, %dTS, %03d%%CrR, %03d%%MuR, %dMNM,"
                                " %02dSEpis, %02dSt/", outRoot, popsize, generations, tournSize,
-                    (int) (crossoverRate * 100), (int) (mutationRate * 100), maxMuts, numSampEpis, SDANumStates);
-        }
+                                (int) (crossoverRate * 100), (int) (mutationRate * 100), maxMuts, numSampEpis, SDANumStates);
+                                }
+            else{
+                sprintf(pathToOut, "%sOutput - EL w %03dPS, %06dMevs, %dTS, %03d%%CrR, %s, %dMNM,"
+                               " %02dSEpis, %02dSt/", outRoot, popsize, generations, tournSize,
+                    (int) (crossoverRate * 100), (altMutRate==1?"SigmoidMuR":"PercentMuRVer5"), maxMuts, numSampEpis, SDANumStates);
+        
+            }
+            }
     } else if (ctrlFitnessFctn == 1) { // TODO: Not Yet Implemented.
         sprintf(pathToOut, "%sOutput - PM%d w %03dPS, %06dMevs, %dTS, %03d%%CrR, %03d%%MuR, %dMNM,"
                            " %02dSEpis, %02dSt/", outRoot, profileNum, popsize, generations, tournSize,
@@ -132,14 +140,18 @@ int main(int numCmdLineArgs, char *cmdLineArgs[]) {
                     cout << left << setw(5) << run;
                     cout << left << setw(4) << mev / reportEvery;
                 }
-                report(runStats);
+                report(runStats);// update report after x amount of mating events
+
+                if (prevBestVal != currentBestVal) RICCounter = 0;// if there is a change in the best fitness value reset counter
+                else RICCounter++;// else increase reporting interval counter
 
                 if(altMutRate == 1){// if using the second option for mutation
-                    sigmoidFunc((mev % 34) + 1);// call the sigmoid function 
+                    sigmoidFunc();// call the sigmoid function 
                 }
                 else if(altMutRate == 2){// if using first option for mutation
                     altMutRatePercent();// call the percentage based increase
                 }
+                
             }
         }
         runStats.close();

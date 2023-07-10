@@ -82,6 +82,7 @@ Graph network(numNodes);
 vector<int> SDAOutput;
 vector<int> epiProfile;
 
+int RICCounter = 1; // Reporting Interval Change counter
 double currentBestVal = 0;
 double prevBestVal = 0;// holds the best value from the previous run !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -124,23 +125,29 @@ int getArgs(char *args[]) {
     generations = stoi(args[7]);
     tournSize = stoi(args[8]);
     crossoverRate = stod(args[9]);
-    mutationRate = stod(args[10]);
-    maxMuts = stoi(args[11]);
-    numSampEpis = stoi(args[12]);
-    SDANumStates = stoi(args[13]);
+    
+    altMutRate = stoi(args[10]);
+    if(altMutRate == 1) mutationRate = 0;
+    else if(altMutRate == 2) mutationRate = 0.05;
+
+    mutationRate = stod(args[11]);
+    maxMuts = stoi(args[12]);
+    numSampEpis = stoi(args[13]);
+    SDANumStates = stoi(args[14]);
     if (ctrlFitnessFctn == 1) { // Profile Matching
-        pathToProfile = args[14];
-        profileNum = stoi(args[15]);
+        pathToProfile = args[15];
+        profileNum = stoi(args[16]);
     } else if (newVarProb > 0.0) { // Variants
-        initOneBits = stoi(args[14]);
-        minEdits = stoi(args[15]);
-        maxEdits = stoi(args[16]);
-        varCoupled = stoi(args[17]) == 1;
+        initOneBits = stoi(args[15]);
+        minEdits = stoi(args[16]);
+        maxEdits = stoi(args[17]);
+        varCoupled = stoi(args[18]) == 1;
         if (!varCoupled) {
-            varAlphaDelta = stod(args[18]);
+            varAlphaDelta = stod(args[19]);
         }
     }
-    altMutRate = stoi(args[19]);
+    
+
     cout << "Arguments Captured!" << endl;
     return 0;
 }
@@ -587,6 +594,7 @@ void report(ostream &outStrm) {//make a statistical report
     double stdDev = stats[1];
     double CI95 = stats[2];
     double bestVal = stats[3];
+    prevBestVal = currentBestVal;// update previous best value to curretn best value before update
     currentBestVal = stats[3];// record the best value for the current run
     double worstVal = stats[4];
 
@@ -661,29 +669,81 @@ vector<double> calcStats(const vector<int> &goodIdxs, bool biggerBetter) {
 This method uses sigmoid function to alter the mutation rate based on the current mating event !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 sigmoid to be used:  1/(1+e^(5-x))
 */
-void sigmoidFunc(int event) {
-    mutationRate = 1/(1 + exp(5 - event));// re-calculate the mutation rate using sigmoid function
+void sigmoidFunc() {
+
+    if(prevBestVal == 0){ // if the previous best value is zero
+        return;// return without changing mutation rate
+    }
+    mutationRate = 1/(1 + exp(5 - RICCounter));// re-calculate the mutation rate using sigmoid function
 }//SigmoidFunc
 
 void altMutRatePercent(){
 
     if(prevBestVal == 0){ // if the previous best value is zero
-        prevBestVal = currentBestVal;// set it to the current best value 
         return;// return without changing mutation rate
     }
 
     int change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
     change = change/currentBestVal;// calculate percentage increase 
 
-    if(change == 0) mutationRate += .3;// if no change
-    else if(change > 0 && change <= .01 ) mutationRate += .2;// if small change
-    else if(change > .01 && change <= .05) mutationRate += .1;// if better change
-    else if(change > 0.5 && change <= .2) mutationRate += .05;// if greatest change
+    if(change == 0) mutationRate += .01;// if no change
+    else if(change > 0 && change <= .01 ) mutationRate -= .05;// if small change
+    else if(change > .01 && change <= .05) mutationRate -= .1;// if better change
+    else if(change > 0.05 && change <= .2) mutationRate -= .2;// if greatest change
     else mutationRate = .05;// reset mutation rate if got a good change in fitness
 
-    prevBestVal = currentBestVal;// update the previous best val to the current best val
+}//altMutRatePercentver4
 
-}//altMutRatePercent
+// void altMutRatePercent(){
+
+//     if(prevBestVal == 0){ // if the previous best value is zero
+//         return;// return without changing mutation rate
+//     }
+
+//     int change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
+//     change = change/currentBestVal;// calculate percentage increase 
+
+//     if(change == 0) mutationRate += .3;// if no change
+//     else if(change > 0 && change <= .01 ) mutationRate += .05;// if small change
+//     else if(change > .01 && change <= .05) mutationRate += .1;// if better change
+//     else if(change > 0.05 && change <= .2) mutationRate += .2;// if greatest change
+//     else mutationRate = .05;// reset mutation rate if got a good change in fitness
+
+// }//altMutRatePercentver1
+
+// void altMutRatePercent(){
+
+//     if(prevBestVal == 0){ // if the previous best value is zero
+//         return;// return without changing mutation rate
+//     }
+
+//     int change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
+//     change = change/currentBestVal;// calculate percentage increase 
+
+//     if(change == 0) mutationRate += .3;// if no change
+//     else if(change > 0 && change <= .01 ) mutationRate -= .05;// if small change
+//     else if(change > .01 && change <= .05) mutationRate -= .1;// if better change
+//     else if(change > 0.05 && change <= .2) mutationRate -= .2;// if greatest change
+//     else mutationRate = .05;// reset mutation rate if got a good change in fitness
+
+// }//altMutRatePercentver2
+
+// void altMutRatePercent(){
+
+//     if(prevBestVal == 0){ // if the previous best value is zero
+//         return;// return without changing mutation rate
+//     }
+
+//     int change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
+//     change = change/currentBestVal;// calculate percentage increase 
+
+//     if(change == 0) mutationRate += .1;// if no change
+//     else if(change > 0 && change <= .01 ) mutationRate -= .05;// if small change
+//     else if(change > .01 && change <= .05) mutationRate -= .1;// if better change
+//     else if(change > 0.05 && change <= .2) mutationRate -= .2;// if greatest change
+//     else mutationRate = .05;// reset mutation rate if got a good change in fitness
+
+// }//altMutRatePercentver3
 
 void matingEvent() {
     int numMuts;
