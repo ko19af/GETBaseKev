@@ -127,10 +127,11 @@ int getArgs(char *args[]) {
     crossoverRate = stod(args[9]);
     
     altMutRate = stoi(args[10]);
+
+    if(altMutRate == 0) mutationRate = stod(args[11]);
     if(altMutRate == 1) mutationRate = 0;
     else if(altMutRate == 2) mutationRate = 0.05;
-
-    mutationRate = stod(args[11]);
+    
     maxMuts = stoi(args[12]);
     numSampEpis = stoi(args[13]);
     SDANumStates = stoi(args[14]);
@@ -284,15 +285,21 @@ void cmdLineRun(int run, ostream &outStrm) {
     outStrm << left << setw(4) << "0";
 }
 
+/**
+ * This method initializes the population by clearing the old information from the previous run while simultaneously
+ * initializing the population, fit and dead arrays it for the next run
+*/
+
 void initPop() {
     // Generate the Initial Population
     for (int idx = 0; idx < popsize; idx++) {
         dead[idx] = false;
-        SDAPop[idx].fillOutput(SDAOutput);
-        while (necroticFilter()) {
+        
+        do{
             SDAPop[idx].randomize();
             SDAPop[idx].fillOutput(SDAOutput);
-        }
+        }while(necroticFilter());
+        
         fits[idx] = fitness(idx, false);
     }
 
@@ -575,6 +582,10 @@ double fitness(int idx, bool final) {//compute the fitness
     }
 }
 
+/* 
+This method generates a statistical report, showing the number of resulting dead SDAs and any statistical data involved in the run
+*/
+
 void report(ostream &outStrm) {//make a statistical report
     vector<int> goodIdxs;
     int deaths = 0;
@@ -627,7 +638,8 @@ void report(ostream &outStrm) {//make a statistical report
     outStrm << left << setw(10) << stdDev;
     outStrm << left << setw(12) << bestVal;
     outStrm << left << setw(10) << bestEpiVal[bestIdx];
-    outStrm << left << setw(8) << deaths << endl;
+    outStrm << left << setw(8) << deaths;
+    outStrm << left << setw(10) << mutationRate << endl;
 
     if (verbose) {
         cout << left << setw(10) << mean;
@@ -635,7 +647,8 @@ void report(ostream &outStrm) {//make a statistical report
         cout << left << setw(10) << stdDev;
         cout << left << setw(12) << bestVal;
         cout << left << setw(10) << bestEpiVal[bestIdx];
-        cout << left << setw(8) << deaths << endl;
+        cout << left << setw(8) << deaths;
+        cout << left << setw(10) << mutationRate << endl;
     }
 }
 
@@ -683,14 +696,17 @@ void altMutRatePercent(){
         return;// return without changing mutation rate
     }
 
-    int change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
+    double change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
     change = change/currentBestVal;// calculate percentage increase 
 
-    if(change == 0) mutationRate += .01;// if no change
+    if(change == 0) mutationRate += .3;// if no change
     else if(change > 0 && change <= .01 ) mutationRate -= .05;// if small change
     else if(change > .01 && change <= .05) mutationRate -= .1;// if better change
     else if(change > 0.05 && change <= .2) mutationRate -= .2;// if greatest change
     else mutationRate = .05;// reset mutation rate if got a good change in fitness
+    
+    if(mutationRate > 1.0) mutationRate = 1.0;
+    else if(mutationRate < 0) mutationRate = 0;
 
 }//altMutRatePercentver4
 

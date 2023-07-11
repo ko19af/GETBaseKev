@@ -67,10 +67,18 @@ int SDA::create() {
     return 0;
 }
 
+/*
+This method sets the length of the bit vector that the SDA will produce
+*/
+
 int SDA::setOutputLen(int newLen) {
     this->outputLen = newLen;
     return 0;
 }
+
+/*
+This method takes an SDA and randomizes the transitions and responses of states in the SDA
+*/
 
 int SDA::randomize() {
     if (initChar < 0) {
@@ -97,6 +105,10 @@ int SDA::randomize() {
     if (verbose) cout << "SDA Randomized." << endl;
     return 0;
 }
+
+/*
+This method makes a copy of an SDA
+*/
 
 int SDA::copy(SDA &other) {
     if (initChar < 0) {
@@ -140,6 +152,10 @@ int SDA::copy(SDA &other) {
     if (verbose) cout << "SDA Copied." << endl;
     return 0;
 }
+
+/*
+This method performs a two-point crossover on two SDAs
+*/
 
 int SDA::twoPointCrossover(SDA &other) {
     if (initChar < 0) {
@@ -196,6 +212,13 @@ int SDA::twoPointCrossover(SDA &other) {
     return 0;
 }
 
+/**
+ * This method performs a onestate crossover using two different SADs
+ * 
+ * @param other is the second SDA the crossover is being performed with
+*/
+
+
 int SDA::oneStateCrossover(SDA &other) {
     if (initChar < 0) {
         cout << "Error in SDA Class: oneStateCrossover(...): this SDA has not been initialized.";
@@ -239,6 +262,13 @@ int SDA::oneStateCrossover(SDA &other) {
     return 0;
 }
 
+/**
+ * This method performs mutations on the SDA, which involves swapping either the transitions or responses, this has a
+ * 50% chance of occuring if one does not happen than the other does.
+ * 
+ * @param numMuts is the number of mutations that will be performed on the SDA
+*/
+
 int SDA::mutate(int numMuts) {
     if (initChar < 0) {
         cout << "Error in SDA Class: mutate(...): this SDA has not been initialized.";
@@ -271,6 +301,17 @@ int SDA::mutate(int numMuts) {
     return 0;
 }
 
+/**
+ * This method initalizes the SDA to its initial state, adds the initial character
+ * to a vector and uses the added elements to transition from state to state,
+ * appending the responses to the vector until the vector contains "outputlen"
+ * number of elements.
+ * 
+ * @param output is the vector containg the transitions from one state in the SDA to another
+ * @param printToo Is a boolean value detemring if the SDA is printed to the designated output stream
+ * @param outstream The designated output stream the generated SDA values are printed
+*/
+
 int SDA::fillOutput(vector<int> &output, bool printToo, ostream &outStream) {
     if (initChar < 0) {
         cout << "Error in SDA Class: fillOutput(...): this SDA has not been initialized.";
@@ -286,20 +327,29 @@ int SDA::fillOutput(vector<int> &output, bool printToo, ostream &outStream) {
     int tailIdx = 0;
     curState = initState;
     output[headIdx++] = initChar;
-    if (printToo) outStream << initChar;
+    if (printToo) outStream << initChar;// print the inital character entering the SDA
 
     while (headIdx < outputLen) {
         for (int val: responses[curState][output[tailIdx]]) {
             if (headIdx < outputLen) {
                 output[headIdx++] = val;
-                if (printToo) outStream << " " << val;
+                if (printToo) outStream << " " << val;// print the response associated with a state
             }
         }
         curState = transitions[curState][output[tailIdx++]];
     }
-    if (printToo) outStream << endl;
+    if (printToo) outStream << endl;// create new line
     return 0;
 }
+
+/**
+ * This method returns the ouput associated with this SDA in a vector, and prints it to a designated output if
+ * designated so by the user
+ * 
+ * @param prinToo the boolean value determing if the resulting output is printed to the designated output stream
+ * @param ostream designates where the ouput from the SDA will be printed
+ * 
+*/
 
 vector<int> SDA::rtnOutput(bool printToo, ostream &outStream) {
     if (initChar < 0) {
@@ -311,6 +361,12 @@ vector<int> SDA::rtnOutput(bool printToo, ostream &outStream) {
     fillOutput(output, printToo, outStream);
     return output;
 }
+
+/**
+ * This method prints the SDA currently stored in the class
+ * 
+ * @param ostream is the destination the informaiton from the method is being printed
+*/
 
 int SDA::printSDA(ostream &outStream = cout) {
     if (initChar < 0) {

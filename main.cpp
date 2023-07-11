@@ -67,7 +67,7 @@ int main(int numCmdLineArgs, char *cmdLineArgs[]) {
             else{
                 sprintf(pathToOut, "%sOutput - EL w %03dPS, %06dMevs, %dTS, %03d%%CrR, %s, %dMNM,"
                                " %02dSEpis, %02dSt/", outRoot, popsize, generations, tournSize,
-                    (int) (crossoverRate * 100), (altMutRate==1?"SigmoidMuR":"PercentMuRVer5"), maxMuts, numSampEpis, SDANumStates);
+                    (int) (crossoverRate * 100), (altMutRate==1?"SigmoidMuR":"PercentMuR"), maxMuts, numSampEpis, SDANumStates);
         
             }
             }
@@ -132,6 +132,7 @@ int main(int numCmdLineArgs, char *cmdLineArgs[]) {
         if (verbose) cmdLineRun(run, cout);
         initPop(); // Initialization
         report(runStats); // Initial Report
+
         for (int mev = 1; mev <= generations; mev++) { // Evolution
             matingEvent();
             
@@ -151,7 +152,7 @@ int main(int numCmdLineArgs, char *cmdLineArgs[]) {
                 else if(altMutRate == 2){// if using first option for mutation
                     altMutRatePercent();// call the percentage based increase
                 }
-                
+
             }
         }
         runStats.close();
