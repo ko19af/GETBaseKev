@@ -690,6 +690,26 @@ void sigmoidFunc() {
     mutationRate = 1/(1 + exp(5 - RICCounter));// re-calculate the mutation rate using sigmoid function
 }//SigmoidFunc
 
+// void altMutRatePercent(){
+
+//     if(prevBestVal == 0){ // if the previous best value is zero
+//         return;// return without changing mutation rate
+//     }
+
+//     double change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
+//     change = change/currentBestVal;// calculate percentage increase 
+
+//     if(change == 0) mutationRate += .3;// if no change
+//     else if(change > 0 && change <= .01 ) mutationRate -= .05;// if small change
+//     else if(change > .01 && change <= .05) mutationRate -= .1;// if better change
+//     else if(change > 0.05 && change <= .2) mutationRate -= .2;// if greatest change
+//     else mutationRate = .05;// reset mutation rate if got a good change in fitness
+    
+//     if(mutationRate > 1.0) mutationRate = 1.0;
+//     else if(mutationRate < 0) mutationRate = 0;
+
+// }//altMutRatePercentver4
+
 void altMutRatePercent(){
 
     if(prevBestVal == 0){ // if the previous best value is zero
@@ -700,32 +720,14 @@ void altMutRatePercent(){
     change = change/currentBestVal;// calculate percentage increase 
 
     if(change == 0) mutationRate += .3;// if no change
-    else if(change > 0 && change <= .01 ) mutationRate -= .05;// if small change
-    else if(change > .01 && change <= .05) mutationRate -= .1;// if better change
-    else if(change > 0.05 && change <= .2) mutationRate -= .2;// if greatest change
+    else if(change > 0 && change <= .01 ) mutationRate += .05;// if small change
+    else if(change > .01 && change <= .05) mutationRate += .1;// if better change
+    else if(change > 0.05 && change <= .2) mutationRate += .2;// if greatest change
     else mutationRate = .05;// reset mutation rate if got a good change in fitness
-    
+
     if(mutationRate > 1.0) mutationRate = 1.0;
-    else if(mutationRate < 0) mutationRate = 0;
 
-}//altMutRatePercentver4
-
-// void altMutRatePercent(){
-
-//     if(prevBestVal == 0){ // if the previous best value is zero
-//         return;// return without changing mutation rate
-//     }
-
-//     int change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
-//     change = change/currentBestVal;// calculate percentage increase 
-
-//     if(change == 0) mutationRate += .3;// if no change
-//     else if(change > 0 && change <= .01 ) mutationRate += .05;// if small change
-//     else if(change > .01 && change <= .05) mutationRate += .1;// if better change
-//     else if(change > 0.05 && change <= .2) mutationRate += .2;// if greatest change
-//     else mutationRate = .05;// reset mutation rate if got a good change in fitness
-
-// }//altMutRatePercentver1
+}//altMutRatePercentver1
 
 // void altMutRatePercent(){
 
@@ -733,7 +735,7 @@ void altMutRatePercent(){
 //         return;// return without changing mutation rate
 //     }
 
-//     int change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
+//     double change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
 //     change = change/currentBestVal;// calculate percentage increase 
 
 //     if(change == 0) mutationRate += .3;// if no change
@@ -741,6 +743,9 @@ void altMutRatePercent(){
 //     else if(change > .01 && change <= .05) mutationRate -= .1;// if better change
 //     else if(change > 0.05 && change <= .2) mutationRate -= .2;// if greatest change
 //     else mutationRate = .05;// reset mutation rate if got a good change in fitness
+
+//     if(mutationRate > 1.0) mutationRate = 1.0;
+//     else if(mutationRate < 0.0) mutationRate = 0.0;
 
 // }//altMutRatePercentver2
 
@@ -750,7 +755,7 @@ void altMutRatePercent(){
 //         return;// return without changing mutation rate
 //     }
 
-//     int change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
+//     double change = prevBestVal - currentBestVal;// calculat ethe change between the previous and current best values
 //     change = change/currentBestVal;// calculate percentage increase 
 
 //     if(change == 0) mutationRate += .1;// if no change
@@ -758,6 +763,9 @@ void altMutRatePercent(){
 //     else if(change > .01 && change <= .05) mutationRate -= .1;// if better change
 //     else if(change > 0.05 && change <= .2) mutationRate -= .2;// if greatest change
 //     else mutationRate = .05;// reset mutation rate if got a good change in fitness
+
+//     if(mutationRate > 1.0) mutationRate = 1.0;
+//     if(mutationRate < 0.0) mutationRate = 0.0;
 
 // }//altMutRatePercentver3
 
